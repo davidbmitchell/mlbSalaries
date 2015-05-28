@@ -6,22 +6,9 @@
 #
 
 library(shiny)
-library(dplyr)
-library(ggplot2)
-library(scales)
 
-
-
-sal <- read.csv('data/mlbSalaries.csv')
-
-team.sal <- setNames(aggregate(sal$salary, by=list(year = sal$year,
-                                                   team = sal$team),
-                                           FUN=sum),
-                    c("year", "team", "salary")) 
-
-year <- as.numeric(unique(team.sal$year))
-
-team <- as.character(unique(sal$team))
+team.sal <- readRDS("data/Team.Salaries.rds")
+name <- as.character(unique(team.sal$name))
 
 shinyUI(navbarPage("Navbar!",
   tabPanel("Team Salaries Over Time",
@@ -35,8 +22,8 @@ shinyUI(navbarPage("Navbar!",
     fluidRow(
       shiny::column(4, offset = 2,
         sliderInput("year", "Year",
-                    min = min(year), max = max(year),
-                    value = min(year), animate = TRUE
+                    min = 1985, max = 2013,
+                    value = 1985, animate = TRUE
         )
       ),
       shiny::column(4,
@@ -55,7 +42,7 @@ shinyUI(navbarPage("Navbar!",
     ),
     fluidRow(
       shiny::column(4,
-        selectInput("team", "Team", team)
+        selectInput("name", "Team", name)
       )  
     )
   )

@@ -6,26 +6,28 @@
 #
 
 library(shiny)
-library(dplyr)
 library(ggplot2)
+library(ggthemes)
 library(scales)
+
+team.sal <- readRDS("data/Team.Salaries.rds")
+colors <-
+  c("ARI"="#A71930","ATL"="#002F5F","BAL"="#ED4C09","BOS"="#C60C38",
+    "CHN"="#000000","CHA"="#003279","CIN"="#C6011F","CLE"="#003366",
+    "COL"="#333366","DET"="#DE4406","HOU"="#FF7F00","KCA"="#74B4FA", # cin - kc
+    "LAA"="#B71234","LAN"="#0836CB","MIA"="#F9423A","MIL"="#92754C",
+    "MIN"="#072754","NYA"="#1C2841","NYN"="#FB4F14","OAK"="#003831",
+    "PHI"="#BA0C2F","PIT"="#FD8829","SDN"="#84A76C","SEA"="#005C5C", # NYM - SEA
+    "SFN"="#F2552C","SLN"="#C41E3A","TBA"="#9ECEEE","TEX"="#BD1021",
+    "TOR"="#003DA5","WAS"="#BA122B","MON"="#165B9E", "CAL" = "#C4023C",
+    "ML4" = "#043EA4", "FLO" = "#04A6B4", "ANA" = "#B71234")
 
 shinyServer(function(input, output) {
   
   # Filter data based on selections
   output$plot <- renderPlot({ 
     
-    sal <- read.csv('data/mlbSalaries.csv')
-    
-    sal <- sal[sal$year == input$year, c("year", "team", "name", "position", "salary")]
-    
-    team.sal <- setNames(aggregate(sal$salary,
-                                   by=list(year = sal$year,
-                                           team = sal$team
-                                           ),
-                                   FUN=sum),
-                         c("year", "team", "salary"))  
-    
+    team.sal <- team.sal[team.sal$year == input$year, c("year", "team", "salary", "name")]
 
     if(input$order == "Ascending") {
     
@@ -41,18 +43,7 @@ shinyServer(function(input, output) {
     labels <- unique(team.sal$team)
         
     team.sal$team <- factor(team.sal$team, level=labels)
-      
-    colors <-
-      c("ARI"="#A71930","ATL"="#002F5F","BAL"="#ED4C09","BOS"="#C60C38",
-        "CHC"="#000000","CHW"="#003279","CIN"="#C6011F","CLE"="#003366",
-        "COL"="#333366","DET"="#DE4406","HOU"="#FF7F00","KCR"="#74B4FA", # cin - kc
-        "ANA"="#B71234","LAD"="#0836CB","FLA"="#F9423A","MIL"="#92754C",
-        "MIN"="#072754","NYY"="#1C2841","NYM"="#FB4F14","OAK"="#003831",
-        "PHI"="#BA0C2F","PIT"="#FD8829","SDP"="#84A76C","SEA"="#005C5C", # NYM - SEA
-        "SFG"="#F2552C","STL"="#C41E3A","TBD"="#9ECEEE","TEX"="#BD1021",
-        "TOR"="#003DA5","WSN"="#BA122B","MON"="#165B9E")# SF - WAS    
     
-  # Plot that shit
     ggplot(data=team.sal, aes(team,(salary/1000000))) +
     
     geom_point(aes(colour=team),size=4) + 
@@ -65,43 +56,20 @@ shinyServer(function(input, output) {
     scale_y_continuous(
       breaks=ifelse(team.sal$year < 1991, seq(0, 30, 2.5), 
                     ifelse(team.sal$year < 1998, seq(0, 70, 5),
-                           ifelse(team.sal$year < 2003, seq(0, 100, 10), seq(0, 300, 25)
-                          )
-                    )
-              )
-    ) +
+                           ifelse(team.sal$year < 2003, seq(0, 100, 10),
+                                  seq(0, 300, 25))))) +
     
     scale_colour_manual(values=colors,
-                        guide = guide_legend(nrow=15))
+                    guide = guide_legend(nrow=15)) +
+    
+    theme_pander()
   })
   
   
 
   output$plot2 <- renderPlot({
 
-    sal <- read.csv('data/mlbSalaries.csv')
-
-    sal <- sal[sal$team == input$team, c("year", "team", "name", "position", "salary")]
-    
-    year <- as.numeric(unique(sal$year))
-    
-    year <- input$year
-    
-    team.sal <- setNames(aggregate(sal$salary,
-                               by=list(year = sal$year,
-                                       team = sal$team),
-                               FUN=sum),
-                     c("year", "team", "salary")) 
-    
-    colors <-
-      c("ARI"="#A71930","ATL"="#002F5F","BAL"="#ED4C09","BOS"="#C60C38",
-        "CHC"="#000000","CHW"="#003279","CIN"="#C6011F","CLE"="#003366",
-        "COL"="#333366","DET"="#DE4406","HOU"="#FF7F00","KCR"="#74B4FA", # cin - kc
-        "ANA"="#B71234","LAD"="#0836CB","FLA"="#F9423A","MIL"="#92754C",
-        "MIN"="#072754","NYY"="#1C2841","NYM"="#FB4F14","OAK"="#003831",
-        "PHI"="#BA0C2F","PIT"="#FD8829","SDP"="#84A76C","SEA"="#005C5C", # NYM - SEA
-        "SFG"="#F2552C","STL"="#C41E3A","TBD"="#9ECEEE","TEX"="#BD1021",
-        "TOR"="#003DA5","WSN"="#BA122B","MON"="#165B9E")
+    team.sal <- team.sal[team.sal$name == input$name, c("year", "team", "salary", "name")]
     
     ggplot(data=team.sal, aes(year,(salary/1000000))) +
       
@@ -111,7 +79,12 @@ shinyServer(function(input, output) {
       
       scale_colour_manual(values=colors) +
       
-      scale_x_continuous(breaks=pretty_breaks(n=10), limits=c(input$slider[1],input$slider[2])) 
+      scale_x_continuous(breaks=pretty_breaks(n=10), limits=c(input$slider[1],input$slider[2])) +
+      
+      labs(y = "Salary in Millions of Dollars",
+           x = "Year") +
+      
+      theme_hc()
 
   })
   
