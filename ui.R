@@ -7,12 +7,12 @@
 
 library(shiny)
 
-team.sal <- readRDS("data/Team.Salaries.rds")
-name <- as.character(unique(team.sal$name))
+Team.Payroll <- readRDS("data/Team.Payroll.rds")
+Team <- as.character(unique(Team.Payroll$Team))
 
 shinyUI(navbarPage("Navbar!",
-  tabPanel("Team Salaries Over Time",
-    headerPanel("Salaries of Major League Baseball Teams Over Time"),
+  tabPanel("Team Payrolls Over Time",
+    headerPanel("Payrolls of Major League Baseball Teams Over Time"),
     fluidRow(
       shiny::column(12,
         plotOutput("plot")
@@ -21,7 +21,7 @@ shinyUI(navbarPage("Navbar!",
     
     fluidRow(
       shiny::column(4, offset = 2,
-        sliderInput("year", "Year",
+        sliderInput("Year", "Year",
                     min = 1985, max = 2013,
                     value = 1985, animate = TRUE
         )
@@ -42,8 +42,14 @@ shinyUI(navbarPage("Navbar!",
     ),
     fluidRow(
       shiny::column(4,
-        selectInput("name", "Team", name)
+        selectInput("Team", "Team", Team)
       )  
     )
-  )
+  ),
+  tabPanel("MLB Payroll Data Table",
+           headerPanel("MLB Payroll Data"),
+           fluidRow(
+             DT::dataTableOutput(outputId="table")
+             )
+           )
 ))
