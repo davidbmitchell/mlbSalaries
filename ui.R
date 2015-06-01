@@ -10,46 +10,36 @@ library(shiny)
 Team.Payroll <- readRDS("data/Team.Payroll.rds")
 Team <- as.character(unique(Team.Payroll$Team))
 
-shinyUI(navbarPage("Navbar!",
-  tabPanel("Team Payrolls Over Time",
-    headerPanel("Payrolls of Major League Baseball Teams Over Time"),
-    fluidRow(
-      shiny::column(12,
-        plotOutput("plot")
-      )
-    ),
-    
-    fluidRow(
-      shiny::column(4, offset = 2,
-        sliderInput("Year", "Year",
-                    min = 1985, max = 2013,
-                    value = 1985, animate = TRUE
-        )
-      ),
-      shiny::column(4,
-        selectInput("order", "Order By:",
-                    c("Ascending", "Descending")
-        )
-      )
-    )
-  ),
-  tabPanel("Each Teams Payroll Over Time",
-    headerPanel("Team Salaries From 1985-2014"),
-    fluidRow(
-      shiny::column(12,
-        plotOutput("plot2")
-      )
-    ),
-    fluidRow(
-      shiny::column(4,
-        selectInput("Team", "Team", Team)
-      )  
-    )
-  ),
-  tabPanel("MLB Payroll Data Table",
-           headerPanel("MLB Payroll Data"),
-           fluidRow(
-             DT::dataTableOutput(outputId="table")
-             )
-           )
-))
+shinyUI(fluidPage(
+	tags$head(
+		tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+	),
+	titlePanel("MLB Team Payrolls"),
+	mainPanel(
+		tabsetPanel(id = "tabset",
+			tabPanel("Team Payrolls Over Time",
+				h2("Payrolls of MLB Teams Over Time"),
+				fluidRow(
+					column(7,
+						sliderInput("Year", "Year", min = 1985, max = 2014, value = 1985, sep="")
+						),
+					column(4,
+						selectInput("order", "Order By:", c("Ascending", "Descending"))
+						)
+					),
+				plotOutput("plot",width="900px")),
+			tabPanel("Each Teams Payroll Over Time", 
+				h2("Team Salaries From 1985-2014"), 
+				fluidRow(
+					column(4, selectInput("Team", "Team", Team))),
+				plotOutput("plot2")
+				),
+			tabPanel("MLB Payroll Data Table",
+				h2("MLB Payroll Data"),
+				fluidRow(
+					DT::dataTableOutput(outputId="table"))
+				)
+			)
+		)
+	)
+)

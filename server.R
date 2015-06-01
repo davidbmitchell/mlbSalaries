@@ -7,7 +7,6 @@
 
 library(shiny)
 library(ggplot2)
-library(ggthemes)
 library(scales)
 library(magrittr)
 
@@ -25,72 +24,54 @@ colors <-
 
 shinyServer(function(input, output) {
   
-  # Filter data based on selections
-  output$plot <- renderPlot({ 
+  # plot of all teams payroll by year
+  output$plot <- renderPlot({
+    Team.Payroll <- Team.Payroll[Team.Payroll$Year == input$Year, 
+                      c("Year", "Team", "Payroll", "Wins", "Franchise.ID")]
     
-    Team.Payroll <- Team.Payroll[Team.Payroll$Year == input$Year, c("Year", "Team", "Payroll", "Wins", "Franchise.ID")]
-
     if(input$order == "Ascending") {
-    
       Team.Payroll <- with(Team.Payroll, Team.Payroll[order(Payroll),])
-    
     } else {
-      
-        Team.Payroll <- with(Team.Payroll, Team.Payroll[order(-Payroll),])
-    
+      Team.Payroll <- with(Team.Payroll, Team.Payroll[order(-Payroll),])
     }
-    
     
     labels <- unique(Team.Payroll$Franchise.ID)
         
     Team.Payroll$Franchise.ID <- factor(Team.Payroll$Franchise.ID, level=labels)
     
     ggplot(data=Team.Payroll, aes(Franchise.ID,(Payroll/1000000))) +
-    
-    geom_point(aes(colour=Franchise.ID),size=4) + 
-    
-    geom_hline(yintercept=(mean(Team.Payroll$Payroll)/1000000)) +
-    
-    labs(y = "Team Salaries in Millions of Dollars",
-         x = "Team") +
-    
-    scale_y_continuous(
-      breaks=ifelse(Team.Payroll$Year < 1991, seq(0, 30, 2.5), 
+      geom_point(aes(colour=Franchise.ID),size=4) + 
+      geom_hline(yintercept=(mean(Team.Payroll$Payroll)/1000000)) +
+      labs(y = "Team Salaries in Millions of Dollars", x = "Team") +
+      scale_y_continuous(breaks=ifelse(Team.Payroll$Year < 1991, seq(0, 30, 2.5), 
                     ifelse(Team.Payroll$Year < 1998, seq(0, 70, 5),
                            ifelse(Team.Payroll$Year < 2003, seq(0, 100, 10),
                                   seq(0, 300, 25))))) +
-    
-    scale_colour_manual(values=colors,
-                    guide = guide_legend(nrow=15)) +
-    
-    theme_pander()
+      scale_colour_manual(values=colors, guide = guide_legend(nrow=15)) +
+      theme_bw()
   })
   
-  
-
+  # plot of payrolls overtime by team
   output$plot2 <- renderPlot({
 
     Team.Payroll <- Team.Payroll[Team.Payroll$Team == input$Team, c("Year", "Team", "Payroll", "Wins", "Franchise.ID")]
     
     ggplot(data=Team.Payroll, aes(Year,(Payroll/1000000))) +
-      
       geom_line(aes(colour=Franchise.ID)) +
-      
       geom_point(aes(colour=Franchise.ID),size=4) +
-      
       scale_colour_manual(values=colors) +
+      scale_x_continuous(breaks=pretty_breaks(n=10),
+                        limits=c(input$slider[1],input$slider[2])) +
+      labs(y = "Salary in Millions of Dollars", x = "Year") +
+      ggtitle(paste(input$Team, "Payrolls", sep= " ")) +
+      theme_bw() +
+      theme(legend.position="none", plot.title=element_text(size=18)) 
       
-      scale_x_continuous(breaks=pretty_breaks(n=10), limits=c(input$slider[1],input$slider[2])) +
-      
-      labs(y = "Salary in Millions of Dollars",
-           x = "Year") +
-      
-      theme_hc()
-
   })
   
+  # table containing the data used for this project
   output$table <- DT::renderDataTable({
-    DT::datatable(Team.Payroll, rownames=F) %>% DT::formatCurrency("Payroll", currency = "$", interval = 3, mark = ",")
+    DT::datatable(Team.Payroll, rownames=F) %>% 
+      DT::formatCurrency("Payroll", currency = "$", interval = 3, mark = ",")
   })
-  
 })
