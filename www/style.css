@@ -1,0 +1,9 @@
+@import url('//fonts.googleapis.com/css?family=Raleway');
+
+body {
+  font-family: 'Raleway';  
+}
+
+.col-sm-8 {
+    width: 100%;
+}
